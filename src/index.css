@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #000;
+  --color-brand-sidebar: #05080f;
+  --color-brand-card: #0a0f1e;
+  --color-brand-border: #131c2e;
+  --color-brand-border-muted: #1e293b;
+  --color-brand-orange: #ff6a00;
+  --color-brand-orange-dark: #e85000;
+  --color-brand-orange-light: #ff8c38;
+  --color-brand-text: #f1f5f9;
+  --color-brand-text-muted: #94a3b8;
+  --color-brand-text-dim: #475569;
+  
+  --font-serif: "Playfair Display", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-text font-sans antialiased;
+  }
+}
+
+/* High-Density Grid System */
+.compact-grid-row {
+  @apply py-2 md:py-1.5 min-h-[48px] border-b border-brand-border/30 hover:bg-brand-orange/[0.02] transition-colors cursor-pointer;
+}
+
+/* Mobile Road Warrior Navigation */
+@media (max-width: 768px) {
+  .road-warrior-nav {
+    @apply fixed bottom-0 left-0 right-0 h-16 bg-brand-sidebar/80 backdrop-blur-xl border-t border-brand-orange/20 z-[200] flex items-center justify-around px-4 pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)];
+  }
+  
+  .road-warrior-btn {
+    @apply flex flex-col items-center justify-center gap-1 text-brand-text-dim hover:text-brand-orange transition-all;
+  }
+
+  .road-warrior-btn.active {
+    @apply text-brand-orange;
+  }
+
+  .road-warrior-btn span {
+    @apply text-[8px] uppercase font-bold tracking-tighter;
+  }
+}
+
+/* Scrollbar Hardening */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-brand-border rounded-full hover:bg-brand-orange/50 transition-colors;
+}

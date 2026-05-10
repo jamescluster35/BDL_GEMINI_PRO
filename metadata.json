@@ -1,0 +1,6 @@
+{
+  "name": "BDL Leads Pro",
+  "description": "Enterprise-grade lead management dashboard for Blue Data Labs. Features real-time Google Sheets sync, revenue leakage analysis, and Gemini-powered research.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
