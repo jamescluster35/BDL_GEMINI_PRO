@@ -274,8 +274,8 @@ export default function LeadDashboard() {
   }, [selectedLead, isEditing, editedLead, averageMobileScore]);
 
   const filteredLeads = leads.filter(l => {
-    const matchesSearch = l.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (l.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (l.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesView = viewMode === 'Leads' ? l.dealStage !== 'Client' : l.dealStage === 'Client';
     const matchesStatus = statusFilter === 'All' || l.status === statusFilter;
     const matchesSaaSCategory = saasCategoryFilter === 'All' || l.saasOpportunities?.includes(saasCategoryFilter);
@@ -845,7 +845,8 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
   };
 
   const handleEditStart = () => {
-    const leadToEdit = { ...selectedLead! };
+    if (!selectedLead) return;
+    const leadToEdit = { ...selectedLead };
     if (!leadToEdit.followUpDate) {
       leadToEdit.followUpDate = getSuggestedFollowUpDate(leadToEdit.lastContacted, leadToEdit.timezone);
     }
@@ -907,7 +908,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
     try {
       const [summary, speed] = await Promise.all([
         performGeminiResearch(lead),
-        getPageSpeedData(lead.website)
+        lead.website && lead.website.trim() ? getPageSpeedData(lead.website) : Promise.resolve(null)
       ]);
 
       const now = new Date().toISOString();
@@ -926,12 +927,12 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
       let updatedLead: Lead = {
         ...lead,
         evidenceLink: summary,
-        mobileScore: speed?.mobileScore || lead.mobileScore,
+        mobileScore: speed?.mobileScore ?? lead.mobileScore ?? 0,
         lastScanDate: now,
         researchHistory: JSON.stringify(history)
       };
 
-      if (updatedLead.reviewCount > 50 && updatedLead.mobileScore > 70 && updatedLead.status !== 'Qualified') {
+      if ((updatedLead.reviewCount ?? 0) > 50 && (updatedLead.mobileScore ?? 0) > 70 && updatedLead.status !== 'Qualified') {
         const nowStr = new Date().toISOString();
         let currentHistory = history; // Use existing history, don't reparse
         
@@ -2025,11 +2026,11 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
                 <div className="relative z-10">
                   <div className="text-[10px] uppercase font-bold tracking-wider text-brand-text-dim mb-1">Friction Performance Index</div>
                   <div className="flex items-end gap-3">
-                    <div className="text-4xl font-mono font-bold text-red-500">{calculateFrictionScore(isEditing ? editedLead! : selectedLead)}%</div>
+                    <div className="text-4xl font-mono font-bold text-red-500">{calculateFrictionScore(isEditing ? editedLead! : selectedLead) ?? 0}%</div>
                     <div className="mb-1 h-2 flex-1 bg-brand-border rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-red-500 transition-all duration-1000" 
-                        style={{ width: `${calculateFrictionScore(isEditing ? editedLead! : selectedLead)}%` }} 
+                        style={{ width: `${calculateFrictionScore(isEditing ? editedLead! : selectedLead) ?? 0}%` }} 
                       />
                     </div>
                   </div>
