@@ -7,7 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Lead, Partner } from "./leads-schema.ts";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GOOGLE_MAPS_PLATFORM_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY;
+const GOOGLE_MAPS_PLATFORM_KEY = import.meta.env?.VITE_GOOGLE_MAPS_PLATFORM_KEY;
 
 export async function performGeminiResearch(lead: Lead): Promise<string> {
   if (!GEMINI_API_KEY) return "Gemini API key missing.";

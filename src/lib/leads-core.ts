@@ -5,7 +5,7 @@
 
 import { Lead } from './leads-schema.ts';
 
-const APPS_SCRIPT_URL = (import.meta as any).env?.VITE_APPS_SCRIPT_URL || "";
+const APPS_SCRIPT_URL = import.meta.env?.VITE_APPS_SCRIPT_URL || "";
 const LOCAL_STORAGE_KEY = 'bdl-v11';
 
 /**
