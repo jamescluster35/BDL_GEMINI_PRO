@@ -9,7 +9,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import Papa from 'papaparse';
 import { GoogleGenAI } from "@google/genai";
 import { discoverPartners, performGeminiResearch, getPageSpeedData, calculateRevenueLeakage, calculateFrictionScore, calculateDealValue } from '../lib/leads-research';
-import { addPartner, readPartners } from '../lib/partners-core';
+import { addPartner, readPartners, logPartnerInteraction } from '../lib/partners-core';
 import { Lead, Partner, PROPERTY_TO_COLUMN_NAME, DEFAULT_COLUMN_ORDER } from '../lib/leads-schema';
 import { sheetRead, syncLead } from '../lib/leads-core';
 import { detectAllSaaSOpportunities } from '../lib/leads-brokerage';
@@ -117,11 +117,9 @@ export default function LeadDashboard() {
   }, []);
 
   const handleLogInteraction = (partnerId: string) => {
-      import('../lib/partners-core').then(core => {
-          core.logPartnerInteraction(partnerId, interactionAction, interactionNotes);
-          setPartners(core.readPartners());
-          setInteractionNotes('');
-      });
+      logPartnerInteraction(partnerId, interactionAction, interactionNotes);
+      setPartners(readPartners());
+      setInteractionNotes('');
   };
 
   const formatForDateTimeLocal = (dateStr: string | undefined) => {
@@ -268,9 +266,10 @@ export default function LeadDashboard() {
 
   const chartData = useMemo(() => {
     if (!selectedLead) return [];
+    const currentScore = isEditing ? (editedLead?.mobileScore ?? 0) : (selectedLead.mobileScore ?? 0);
     return [
       { name: 'Average', score: averageMobileScore, fill: '#475569' },
-      { name: 'Current', score: isEditing ? editedLead?.mobileScore : selectedLead.mobileScore, fill: '#ff6a00' }
+      { name: 'Current', score: currentScore, fill: '#ff6a00' }
     ];
   }, [selectedLead, isEditing, editedLead, averageMobileScore]);
 
@@ -287,7 +286,7 @@ export default function LeadDashboard() {
     const niches = [...new Set(leads.map(l => l.niche))].filter(Boolean);
     return niches.map(niche => {
       const nicheLeads = leads.filter(l => l.niche === niche);
-      const totalLeakage = nicheLeads.reduce((acc, l) => acc + calculateRevenueLeakage(l).total, 0);
+      const totalLeakage = nicheLeads.reduce((acc, l) => acc + (calculateRevenueLeakage(l)?.total ?? 0), 0);
       return {
         name: niche,
         count: nicheLeads.length,
@@ -550,7 +549,7 @@ export default function LeadDashboard() {
       Text: ${scrapedText}`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
       });
 
@@ -768,9 +767,9 @@ TECHNICAL BRIEFING: ${selectedLead.company}
 -------------------------------------------
 LOCATION: ${selectedLead.city}, ${selectedLead.state}
 NICHE: ${selectedLead.niche}
-PRIORITY: P${selectedLead.priority}
-EST. REVENUE LEAKAGE: $${calculateRevenueLeakage(selectedLead).total.toLocaleString()}
-EST. DEAL VALUE: $${calculateDealValue(selectedLead).toLocaleString()}
+PRIORITY: P${selectedLead.priority ?? 0}
+EST. REVENUE LEAKAGE: $${(calculateRevenueLeakage(selectedLead)?.total ?? 0).toLocaleString()}
+EST. DEAL VALUE: $${(calculateDealValue(selectedLead) ?? 0).toLocaleString()}
 
 DIGITAL FOOTPRINT:
 - Website: ${selectedLead.website || 'None'}
@@ -794,7 +793,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
   };
 
   const handleTemplateSelect = (template: any) => {
-    if (!selectedLead) return;
+    if (!selectedLead || !template) return;
     
     let subject = template.subject.replace('{company}', selectedLead.company);
     let body = template.body
@@ -802,9 +801,9 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
       .replace(/{name}/g, selectedLead.contactName || 'there')
       .replace(/{city}/g, selectedLead.city)
       .replace(/{niche}/g, selectedLead.niche)
-      .replace(/{score}/g, selectedLead.mobileScore.toString())
-      .replace(/{reviews}/g, selectedLead.reviewCount.toString())
-      .replace(/{leakage}/g, `$${calculateRevenueLeakage(selectedLead).total.toLocaleString()}`);
+      .replace(/{score}/g, (selectedLead.mobileScore ?? 0).toString())
+      .replace(/{reviews}/g, (selectedLead.reviewCount ?? 0).toString())
+      .replace(/{leakage}/g, `$${(calculateRevenueLeakage(selectedLead)?.total ?? 0).toLocaleString()}`);
 
     setContactSubject(subject);
     setContactMessage(body);
@@ -934,10 +933,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
 
       if (updatedLead.reviewCount > 50 && updatedLead.mobileScore > 70 && updatedLead.status !== 'Qualified') {
         const nowStr = new Date().toISOString();
-        let currentHistory = [];
-        try {
-          currentHistory = JSON.parse(updatedLead.researchHistory || '[]');
-        } catch (e) {}
+        let currentHistory = history; // Use existing history, don't reparse
         
         currentHistory.unshift({
           date: nowStr,
@@ -1710,7 +1706,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
                 <div className="flex gap-4">
                   <div className="bg-brand-sidebar border border-brand-border p-3 rounded flex flex-col">
                     <span className="text-[10px] text-brand-text-dim font-bold uppercase tracking-tighter">Qualified Volume</span>
-                    <span className="text-xl font-mono text-brand-orange">${leads.filter(l => l.status === 'Qualified').reduce((a, b) => a + calculateDealValue(b), 0).toLocaleString()}</span>
+                    <span className="text-xl font-mono text-brand-orange">${leads.filter(l => l.status === 'Qualified').reduce((a, b) => a + (calculateDealValue(b) ?? 0), 0).toLocaleString()}</span>
                   </div>
                   <div className="bg-brand-sidebar border border-brand-border p-3 rounded flex flex-col">
                     <span className="text-[10px] text-brand-text-dim font-bold uppercase tracking-tighter">Pending Actions</span>
@@ -1739,7 +1735,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
                             <h3 className="font-bold text-sm text-brand-text group-hover:text-brand-orange">{lead.company}</h3>
                             <p className="text-[10px] text-brand-text-dim mt-2 line-clamp-2 italic">{lead.strategicPlay}</p>
                             <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-border/30">
-                              <span className="text-[10px] font-bold font-mono text-green-500">${calculateDealValue(lead).toLocaleString()}</span>
+                              <span className="text-[10px] font-bold font-mono text-green-500">${(calculateDealValue(lead) ?? 0).toLocaleString()}</span>
                               <div className="flex -space-x-2">
                                 <div className="w-6 h-6 rounded-full bg-brand-orange text-black border border-brand-sidebar flex items-center justify-center text-[10px] font-black">{lead.contactName?.charAt(0) || '?'}</div>
                               </div>
@@ -1900,7 +1896,7 @@ BDL INTELLIGENCE NODE: AIS-BDL-101
                       placeholder="Website URL"
                     />
                   ) : (
-                    <a href={selectedLead.website} target="_blank" className="text-xs text-brand-text-muted hover:text-brand-orange transition-colors flex items-center gap-1">
+                    <a href={selectedLead.website && !selectedLead.website.startsWith('http') ? `https://${selectedLead.website}` : selectedLead.website || ''} target="_blank" className="text-xs text-brand-text-muted hover:text-brand-orange transition-colors flex items-center gap-1">
                       <Globe size={12} />
                       <span className="truncate max-w-[150px] md:max-w-none">{selectedLead.website || 'No website'}</span>
                     </a>
