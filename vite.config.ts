@@ -14,13 +14,10 @@ export default defineConfig(({mode}) => {
       transformer: 'postcss', 
     },
   define: {
-      // 1. Create the base 'process.env' object so the browser doesn't crash
-      'process.env': {}, 
-      
-      // 2. Your existing mappings (keep these!)
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY),
-      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_PLATFORM_KEY || ''),
-      'process.env.APPS_SCRIPT_URL': JSON.stringify(env.VITE_APPS_SCRIPT_URL || env.APPS_SCRIPT_URL || ''),
+      // Use the native Vite way
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
+      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
+      'import.meta.env.VITE_APPS_SCRIPT_URL': JSON.stringify(env.VITE_APPS_SCRIPT_URL),
     },
     resolve: {
       alias: {
