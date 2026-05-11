@@ -21,7 +21,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const GOOGLE_MAPS_PLATFORM_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY || '';
+const GOOGLE_MAPS_PLATFORM_KEY = import.meta.env?.VITE_GOOGLE_MAPS_PLATFORM_KEY || '';
 const hasValidMapsKey = Boolean(GOOGLE_MAPS_PLATFORM_KEY) && GOOGLE_MAPS_PLATFORM_KEY !== 'YOUR_API_KEY';
 
 const CONTACT_TEMPLATES = [
