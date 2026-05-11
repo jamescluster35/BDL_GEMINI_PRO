@@ -27,7 +27,7 @@ jobs:
           npm run build
         env:
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.AIzaSyAwdatEdQGzfAlptW8odnpuqY3_fMqsTUc}}
-          VITE_GEMINI_API_KEY: ${{ secrets.AIzaSyCFKAV7tLZoj-pykhlQkdFstmO9LS1-ljY }}
+          VITE_GEMINI_API_KEY: ${{ secrets.AIzaSyCFKAV7tLZoj-pykhlQkdFstmO9LS1-ljY}}
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
