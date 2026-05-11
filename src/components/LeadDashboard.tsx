@@ -20,8 +20,8 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const GOOGLE_MAPS_PLATFORM_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
-const hasValidMapsKey = Boolean(GOOGLE_MAPS_PLATFORM_KEY) && GOOGLE_MAPS_PLATFORM_KEY !== 'YOUR_API_KEY';
+const GOOGLE_MAPS_PLATFORM_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const hasValidMapsKey = Boolean(GOOGLE_MAPS_PLATFORM_KEY) && GOOGLE_MAPS_PLATFORM_KEY !== '';
 
 const CONTACT_TEMPLATES = [
   { 
@@ -541,7 +541,8 @@ export default function LeadDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      // FIX: Change process.env to import.meta.env
+const ai = new GoogleGenAI({apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
       const prompt = `Extract lead information from the following Google Maps text. 
       Identify Company Name, Phone, Website, Category (Niche), City, State, and Rating.
       Look for "Intent Triggers" like mentions of bad service, billing issues, or technical problems.
