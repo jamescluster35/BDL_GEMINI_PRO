@@ -5,7 +5,7 @@
 
 import { Lead } from './leads-schema.ts';
 
-const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
+const APPS_SCRIPT_URL = (import.meta as any).env?.VITE_APPS_SCRIPT_URL || "";
 const LOCAL_STORAGE_KEY = 'bdl-v11';
 
 /**
@@ -35,10 +35,19 @@ export async function sheetRead(): Promise<Lead[]> {
 
     const response = await fetch(url.toString());
     if (!response.ok) {
+      console.error('Fetch response not OK', response.status);
       return readFromLocal();
     }
 
-    const data = await response.json();
+    const textPayload = await response.text();
+    let data;
+    try {
+      data = JSON.parse(textPayload);
+    } catch (e) {
+      console.error('Failed to parse Apps Script response as JSON. It returned:', textPayload.substring(0, 150));
+      alert("Error: The Google Sheets backend didn't return valid data. Check if your Apps Script is deployed with 'Who has access: Anyone'.");
+      return readFromLocal();
+    }
     
     if (data && data.leads) {
       // The backend returns separate arrays for each tab:

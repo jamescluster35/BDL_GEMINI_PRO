@@ -7,7 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Lead, Partner } from "./leads-schema.ts";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GOOGLE_MAPS_PLATFORM_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+const GOOGLE_MAPS_PLATFORM_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY;
 
 export async function performGeminiResearch(lead: Lead): Promise<string> {
   if (!GEMINI_API_KEY) return "Gemini API key missing.";
@@ -55,11 +55,11 @@ export async function validateLead(lead: Lead): Promise<{
   isRejected: boolean; 
   rejectionReason: string; 
 }> {
-  if (!GEMINI_API_KEY) return { isValid: false, reason: "Gemini API key missing." };
+  if (!GEMINI_API_KEY) return { isValid: false, reason: "Gemini API key missing.", legacyScore: 0, isRejected: true, rejectionReason: "No API Key" };
 
   // 1. Basic filter for rejected or already processed
   if (lead.status === 'Rejected' || lead.status === 'Closed') {
-    return { isValid: false, reason: "Lead is already in a terminal status." };
+    return { isValid: false, reason: "Lead is already in a terminal status.", legacyScore: 0, isRejected: true, rejectionReason: "Terminal status" };
   }
 
   // 2. Semantic validation using Gemini

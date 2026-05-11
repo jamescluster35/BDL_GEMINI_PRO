@@ -4,20 +4,13 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
-  // This loads variables from your .env file locally
-  // On GitHub, it will look at the 'env' we set in the YAML file
-  const env = loadEnv(mode, process.cwd(), '');
-
+  const env = loadEnv(mode, '.', '');
   return {
     plugins: [react(), tailwindcss()],
-    css: {
-      transformer: 'postcss', 
-    },
-  define: {
-      // Use the native Vite way
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
-      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
-      'import.meta.env.VITE_APPS_SCRIPT_URL': JSON.stringify(env.VITE_APPS_SCRIPT_URL),
+    define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(env.GOOGLE_MAPS_PLATFORM_KEY || ''),
+      'process.env.APPS_SCRIPT_URL': JSON.stringify(env.APPS_SCRIPT_URL || ''),
     },
     resolve: {
       alias: {
@@ -25,9 +18,9 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
+      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
-    // CHANGED THIS: GitHub Pages needs the repo name as the base
-    base: '/BDL_GEMINI_PRO/', 
   };
 });
